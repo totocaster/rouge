@@ -32,6 +32,11 @@ func count(string:String) -> (vowels:Int, consonants:Int, others:Int) {
 
 count(sayHello("John"))
 
+// Unicode and Emoji support
+let 😄face = "Happy Face"
+let ქართულადაც = "This is Georgian"
+let こんにちは = "...and Japanese"
+
 
 func join(#firstString:String,#secondString:String,joiner:String = " & ") -> String {
     return "\(firstString)\(joiner)\(secondString)"
@@ -48,6 +53,17 @@ func alignedRight(inout #string:String, count:Int, pad:Character) -> String {
     
     return string;
 }
+
+/* This is multiline comment
+/* 
+   This part is nested into parten comment
+*/ 
+    Trailing part of parent comment
+*/
+
+let thisIsNotComment = true
+
+/* Singleline Comment */
 
 var textToAlign = "Toto"
 alignedRight(string: &textToAlign, 10, "-")

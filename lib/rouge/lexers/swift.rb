@@ -1,37 +1,51 @@
+# encoding: utf-8
+
 module Rouge
   module Lexers
     class CSharp < RegexLexer
       tag 'swift'
-      aliases 'apple_swift'
       filenames '*.swift'
-      mimetypes 'text/x-swift' # TODO: this has to be revised
-
-      desc 'Multi paradigm, compiled programming language developed by Apple for iOS and OS X development.' # From Wikipedia.
+     
+      desc 'Multi paradigm, compiled programming language developed by Apple for iOS and OS X development. (developer.apple.com/swift)'
 
       # TODO: support more of unicode
-      id = /\#?[_a-z]\w*/i
+      id = /\#?[_\u0000-\uFFFF]\w*/i
 
-      keywords = %w(
-        class deinit enum extension func import init let protocol static struct subscript typealias var 
-        
-        break case continue default do else fallthrough if in for return switch where while
-        
-        as dynamicType is new super self Self Type __COLUMN__ __FILE__ __FUNCTION__ __LINE__
-        
-        associativity didSet get infix inout left mutating none nonmutating operator override postfix precedence prefix right set unowned unowned(safe) unowned(unsafe) weak willSet
-      )
+      def self.keywords
+        @keywords ||= Set.new %w(
+          break case continue default do else fallthrough if in for return switch where while
+          
+          as dynamicType is new super self Self Type __COLUMN__ __FILE__ __FUNCTION__ __LINE__
+          
+          associativity didSet get infix inout left mutating none nonmutating operator override postfix precedence prefix right set unowned unowned(safe) unowned(unsafe) weak willSet
+        )
+      end
 
-      keywords_type = %w(
-        Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 Int
-        Double Float
-        Bool 
-        String Character 
-      )
+      def self.declarations
+        @declarations ||= Set.new %w(
+          class deinit enum extension func import init let protocol static struct subscript typealias var 
+        )
+      end
+
+      def self.types
+        @types ||= Set.new %w(
+          Int8 Int16 Int32 Int64 UInt8 UInt16 UInt32 UInt64 Int
+          Double Float
+          Bool 
+          String Character 
+        )
+      end
+
+      def self.constants
+        @constants ||= Set.new %w(
+          true false nil
+        )
+      end
 
       state :whitespace do
         rule /\s+/m, Text
         rule %r(\/\/.*?\n), Comment::Single
-        rule %r(\/[*].*?[*]\/)m, Comment::Multiline
+        rule %r((?<re>\/\*(?:(?>[^\/\*\*\/]+)|\g<re>)*\*\/))m, Comment::Multiline
       end
 
       state :root do
@@ -50,10 +64,21 @@ module Rouge
         rule /0b[01]+(?:_[01]+)*/, Num::Bin
         rule %r{[\d]+(?:_\d+)*}, Num::Integer
         
-        rule %r{\b(#{keywords.join('|')})\b}, Keyword
-        rule %r{\b(#{keywords_type.join('|')})\b}, Keyword::Type
-        rule /class|struct|enum/, Keyword, :class
         rule /(?!\b(if|while|for)\b)\b\w+(?=\s*\()/, Name::Function
+        
+        rule id do |m|
+          if self.class.keywords.include? m[0]
+            token Keyword
+          elsif self.class.declarations.include? m[0]
+            token Keyword::Declaration
+          elsif self.class.types.include? m[0]
+            token Keyword::Type
+          elsif self.class.constants.include? m[0]
+            token Keyword::Constant
+          else
+            token Name
+          end
+        end
         rule id, Name
       end
 
